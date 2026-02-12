@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Alert</title>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #ef4444;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .container {
+            border: 2px solid #ef4444;
+            padding: 40px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 10px;
+            max-width: 600px;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #fca5a5;
+        }
+
+        .icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="icon">🛡️</div>
+        <h1>ACCESS DENIED</h1>
+        <p>Your request has been blocked by the Security Gateway.</p>
+        <p><strong>Reason:</strong> {{ type }} Detected</p>
+        <p>Your IP address and action have been logged.</p>
+    </div>
+</body>
+
+</html>

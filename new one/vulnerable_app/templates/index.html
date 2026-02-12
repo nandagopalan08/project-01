@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero">
+    <h1>Welcome to the Vulnerable Client App</h1>
+    <p>This application is intentionally designed with security flaws for educational purposes.</p>
+
+    <div class="actions">
+        <a href="/login" class="btn btn-primary">Test SQL Injection (Login)</a>
+
+        <div class="xss-test">
+            <h3>Test Reflected XSS</h3>
+            <form action="/search" method="GET">
+                <input type="text" name="q" placeholder="Enter search term (try <script>alert(1)</script>)">
+                <button type="submit" class="btn btn-secondary">Search</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

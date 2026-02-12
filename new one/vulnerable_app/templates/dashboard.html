@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard">
+    <h1>Dashboard</h1>
+    <div class="card">
+        <h2>Welcome, {{ username }}!</h2>
+        <p>You have successfully logged into the system.</p>
+        <p>If you bypassed the login using SQL Injection, congratulations!</p>
+    </div>
+</div>
+{% endblock %}

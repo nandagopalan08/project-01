@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Gateway - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --primary: #10b981;
+            /* Green for security */
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            color: var(--primary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        th {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .tag-sql {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .tag-xss {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+        }
+
+        .tag-brute {
+            background: rgba(168, 85, 247, 0.2);
+            color: #e9d5ff;
+        }
+
+        .payload {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px;
+            border-radius: 4px;
+            max-width: 300px;
+            overflow-x: auto;
+            white-space: nowrap;
+            display: block;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ Security Gateway Log</h1>
+            <div>
+                <a href="/" style="color: white; text-decoration: none; margin-right: 20px;">View Site</a>
+                <button onclick="location.reload()"
+                    style="padding: 8px 16px; background: var(--primary); border: none; border-radius: 4px; color: white; cursor: pointer;">Refresh
+                    Logs</button>
+            </div>
+        </header>
+
+        <h2>🚨 Detected Attacks</h2>
+        {% if attacks %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>App Name</th>
+                    <th>Source IP</th>
+                    <th>payload</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attack in attacks %}
+                <tr>
+                    <td>{{ attack['attack_id'] }}</td>
+                    <td>{{ attack['attack_time'] }}</td>
+                    <td>
+                        <span class="tag 
+                            {% if 'SQL' in attack['attack_type'] %}tag-sql
+                            {% elif 'XSS' in attack['attack_type'] %}tag-xss
+                            {% else %}tag-brute{% endif %}">
+                            {{ attack['attack_type'] }}
+                        </span>
+                    </td>
+                    <td>{{ attack['app_name'] }}</td>
+                    <td>{{ attack['ip_address'] }}</td>
+                    <td><span class="payload">{{ attack['payload'] }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty">No attacks detected yet.</div>
+        {% endif %}
+
+        <h2 style="margin-top: 40px; color: #3b82f6;">🔒 Security Activity Log</h2>
+        {% if security_logs %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Time</th>
+                    <th>Action Taken</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in security_logs %}
+                <tr>
+                    <td>{{ log['log_id'] }}</td>
+                    <td>{{ log['timestamp'] }}</td>
+                    <td><span class="tag" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd;">{{
+                            log['action_taken'] }}</span></td>
+                    <td>{{ log['reason'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty">No security actions recorded.</div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

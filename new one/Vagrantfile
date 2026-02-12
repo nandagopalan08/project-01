@@ -1,0 +1,30 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# NOTE: This Vagrantfile is a REFERENCE for how the VM should be configured.
+# Since you have a manual Lubuntu VM, you do NOT need to run 'vagrant up'.
+# However, ensure your manual VM has the following network setup:
+# 1. Bridged Adapter (Recommended) -> Allows the VM to have its own IP on your network.
+# 2. Open Ports: 5000 (Vulnerable App), 3306 (MySQL Database).
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/focal64"
+
+  # Network Configuration
+  # We use a public network (Bridged) so the VM gets its own IP address.
+  # This makes it easier to connect from the Windows Host.
+  config.vm.network "public_network"
+
+  # Sync folders (Optional for manual setup, but useful if using Vagrant)
+  config.vm.synced_folder ".", "/vagrant"
+
+  # Provisioning Configuration
+  # This runs the same script you should run manually in your Lubuntu VM.
+  config.vm.provision "shell", path: "vm_provision.sh"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "2048"
+    vb.cpus = 2
+    vb.name = "WebSecurity_VM"
+  end
+end
