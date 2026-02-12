@@ -3,7 +3,8 @@
 {% block content %}
 <div class="card detail-container">
     <div class="detail-image">
-        <img src="{{ car.image_url }}" alt="{{ car.make }} {{ car.model }}">
+        <img src="{{ car.image_url }}" alt="{{ car.make }} {{ car.model }}"
+            onerror="this.src='https://via.placeholder.com/600x400?text=No+Image'">
         <br><br>
         <a href="/" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Cars</a>
     </div>
@@ -16,24 +17,49 @@
             {{ car.description }}
         </p>
 
-        <hr style="border-color: rgba(255,255,255,0.1); margin: 2rem 0;">
-
-        <h3>Features</h3>
-        <ul>
-            <li>Premium Sound System</li>
-            <li>Leather Seats</li>
-            <li>Autopilot Enabled</li>
-            <li>0-60 in 3.2s</li>
-        </ul>
+        <div class="features-box">
+            <h3><i class="fas fa-check-circle" style="color:var(--primary);"></i> Key Features</h3>
+            <ul>
+                <li>Premium Sound System</li>
+                <li>Leather Interior</li>
+                <li>Navigation System</li>
+                <li>Climate Control</li>
+            </ul>
+        </div>
 
         <br>
         <a href="#" class="btn btn-primary btn-block">Contact Seller</a>
     </div>
 </div>
 
-<!-- VULNERABLE COMMENT SECTION (XSS Potential) -->
-<div class="xss-test">
-    <h3>User Reviews</h3>
-    <p><i>Implement review system here... (Try injecting script in search bar instead)</i></p>
+<!-- COMMENT SECTION (Vulnerable to Stored XSS) -->
+<div class="card" style="margin-top: 2rem;">
+    <h3><i class="fas fa-comments"></i> User Reviews</h3>
+
+    <div class="comment-form">
+        <form action="{{ url_for('add_comment', car_id=car.car_id) }}" method="POST">
+            <div class="form-group">
+                <textarea name="comment" rows="3" placeholder="Write a review... (Try inserting <script>...)"
+                    style="width:100%; padding: 1rem; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px;"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="float: right;">Post Review</button>
+            <div style="clear: both;"></div>
+        </form>
+    </div>
+
+    <div class="comments-list" style="margin-top: 2rem;">
+        {% for comment in comments %}
+        <div class="comment-item" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <strong style="color: var(--primary);">{{ comment.user }}</strong>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">{{ comment.timestamp }}</span>
+            </div>
+            <!-- VULNERABLE: 'safe' filter renders HTML/JS without escaping -->
+            <p style="color: var(--text-main);">{{ comment.comment_text | safe }}</p>
+        </div>
+        {% else %}
+        <p style="color: var(--text-muted); font-style: italic;">No reviews yet. Be the first to review this car!</p>
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

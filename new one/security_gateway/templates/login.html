@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <h2 style="text-align:center; color: var(--primary);"><i class="fas fa-user-shield"></i> Security Admin Login
+        </h2>
+        <p style="text-align:center; margin-bottom: 2rem; color: #94a3b8;">Access the monitoring console.</p>
+
+        {% if error %}
+        <div
+            style="background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 1rem; border-radius: 4px; border: 1px solid #ef4444; margin-bottom: 1rem;">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">Admin Username</label>
+                <input type="text" id="username" name="username" required placeholder="Enter admin username">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Enter password">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="background-color: var(--primary);">Secure
+                Login</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

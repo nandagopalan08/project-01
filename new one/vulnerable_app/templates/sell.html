@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card sell-container">
+    <div class="sell-header">
+        <h1>Sell Your Car</h1>
+        <p>List your vehicle for sale in minutes. Reach thousands of buyers.</p>
+    </div>
+
+    <form action="/sell" method="POST" enctype="multipart/form-data">
+        <div class="form-row">
+            <div class="form-group col">
+                <label for="make">Make</label>
+                <input type="text" id="make" name="make" placeholder="e.g. BMW" required>
+            </div>
+            <div class="form-group col">
+                <label for="model">Model</label>
+                <input type="text" id="model" name="model" placeholder="e.g. M3" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group col">
+                <label for="year">Year</label>
+                <input type="number" id="year" name="year" placeholder="e.g. 2023" required>
+            </div>
+            <div class="form-group col">
+                <label for="price">Price ($)</label>
+                <input type="number" id="price" name="price" placeholder="e.g. 55000" step="0.01" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="image_url">Image URL (Vulnerable Upload)</label>
+            <input type="text" id="image_url" name="image_url" placeholder="https://example.com/image.jpg" required>
+            <small style="color:red; font-size:0.8rem;">Warning: No validation on URL (SSRF/XSS potential)</small>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="4"
+                style="width:100%; padding:0.75rem; background:#0f172a; color:white; border:1px solid #334155; border-radius:6px;"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">List Car for Sale</button>
+    </form>
+</div>
+{% endblock %}

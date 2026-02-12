@@ -53,6 +53,9 @@ CREATE TABLE IF NOT EXISTS login_attempts (
 -- Register the default vulnerable app
 INSERT INTO vulnerable_applications (app_name, app_url) VALUES ('Vulnerable Web App', 'http://localhost:5000');
 
+-- Switch back to Vulnerable Database for App Data
+USE vulnerable_db;
+
 -- Cars Table for Car Selling App
 CREATE TABLE IF NOT EXISTS cars (
     car_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -71,6 +74,16 @@ CREATE TABLE IF NOT EXISTS login_logs (
     ip_address VARCHAR(50),
     status VARCHAR(20), -- 'Success' or 'Failed'
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Comments Table (Vulnerable to XSS)
+CREATE TABLE IF NOT EXISTS comments (
+    comment_id INT AUTO_INCREMENT PRIMARY KEY,
+    car_id INT,
+    user VARCHAR(50),
+    comment_text TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (car_id) REFERENCES cars(car_id) ON DELETE CASCADE
 );
 
 -- Dummy Data for Cars

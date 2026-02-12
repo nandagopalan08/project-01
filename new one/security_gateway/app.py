@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, Response
+from flask import Flask, request, render_template, redirect, url_for, Response, session
 import requests
 import mysql.connector
 import datetime
@@ -110,27 +110,60 @@ def update_login_attempt(ip, is_success):
     conn.commit()
     conn.close()
 
+app.secret_key = 'security_gateway_secret_key'  # Change this in production!
+
+# ... (Database Config and Helpers remain same) ...
+
+@app.route('/gateway_login', methods=['GET', 'POST'])
+def gateway_login():
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        # Hardcoded Admin Credentials for Gateway (Separate from Vulnerable App)
+        if username == 'admin' and password == 'securep@ss': 
+            session['security_admin'] = True
+            return redirect(url_for('admin_panel'))
+        else:
+            error = "Invalid Security Credentials"
+            
+    return render_template('login.html', error=error)
+
+@app.route('/logout')
+def admin_logout():
+    session.pop('security_admin', None)
+    return redirect(url_for('gateway_login'))
+
 @app.route('/admin_panel')
 def admin_panel():
+    if not session.get('security_admin'):
+        return redirect(url_for('gateway_login'))
+        
     conn = get_db()
     attacks = []
     security_logs = []
+    
     if conn:
-        cursor = conn.cursor(dictionary=True)
-        # Fetch Attacks
-        cursor.execute("""
-            SELECT a.*, v.app_name 
-            FROM attacks a 
-            LEFT JOIN vulnerable_applications v ON a.app_id = v.app_id 
-            ORDER BY a.attack_time DESC
-        """)
-        attacks = cursor.fetchall()
-        
-        # Fetch Security Logs
-        cursor.execute("SELECT * FROM security_logs ORDER BY timestamp DESC")
-        security_logs = cursor.fetchall()
-        
-        conn.close()
+        try:
+            cursor = conn.cursor(dictionary=True)
+            # Fetch Attacks
+            cursor.execute("""
+                SELECT a.*, v.app_name 
+                FROM attacks a 
+                LEFT JOIN vulnerable_applications v ON a.app_id = v.app_id 
+                ORDER BY a.attack_time DESC
+            """)
+            attacks = cursor.fetchall()
+            
+            # Fetch Security Logs
+            cursor.execute("SELECT * FROM security_logs ORDER BY timestamp DESC")
+            security_logs = cursor.fetchall()
+        except mysql.connector.Error as err:
+            print(f"Error fetching admin panel data: {err}")
+        finally:
+            conn.close()
+            
     return render_template('admin.html', attacks=attacks, security_logs=security_logs)
 
 # Catch-all Proxy Route

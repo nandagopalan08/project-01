@@ -17,6 +17,7 @@
             <a href="/" class="logo"><i class="fas fa-car-side"></i> CarHub</a>
             <ul class="nav-links">
                 <li><a href="/">Cars</a></li>
+                <li><a href="/sell" style="color:var(--primary); font-weight:700;">+ Sell Your Car</a></li>
                 {% if session.get('user') %}
                 {% if session.get('role') == 'admin' %}
                 <li><a href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>

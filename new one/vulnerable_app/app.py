@@ -10,7 +10,7 @@ app.secret_key = 'vulnerable_secret'
 db_config = {
     'host': os.getenv('DB_HOST', 'localhost'),
     'user': 'root',
-    'password': os.getenv('DB_PASSWORD', ''),  # Use environment variable
+    'password': os.getenv('DB_PASSWORD', 'root'),  # Use environment variable or default to 'root'
     'database': 'vulnerable_db'
 }
 
@@ -59,11 +59,15 @@ def car_detail(car_id):
             cursor = conn.cursor(dictionary=True)
             cursor.execute("SELECT * FROM cars WHERE car_id = %s", (car_id,))
             car = cursor.fetchone()
+            
+            # Fetch comments for this car
+            cursor.execute("SELECT * FROM comments WHERE car_id = %s ORDER BY timestamp DESC", (car_id,))
+            comments = cursor.fetchall()
         finally:
             conn.close()
     
     if car:
-        return render_template('car_details.html', car=car)
+        return render_template('car_details.html', car=car, comments=comments)
     return "Car not found", 404
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -138,6 +142,56 @@ def admin_dashboard():
             conn.close()
 
     return render_template('admin.html', username=session['user'], login_logs=login_logs, attacks=attacks)
+
+@app.route('/sell', methods=['GET', 'POST'])
+def sell_car():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+        
+    if request.method == 'POST':
+        make = request.form.get('make')
+        model = request.form.get('model')
+        year = request.form.get('year')
+        price = request.form.get('price')
+        description = request.form.get('description')
+        image_url = request.form.get('image_url') # VULNERABLE: No validation on URL or file upload mechanism
+        
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor()
+                query = "INSERT INTO cars (make, model, year, price, description, image_url) VALUES (%s, %s, %s, %s, %s, %s)"
+                cursor.execute(query, (make, model, year, price, description, image_url))
+                conn.commit()
+                return redirect(url_for('home'))
+            except mysql.connector.Error as err:
+                return f"Error adding car: {err}"
+            finally:
+                conn.close()
+                
+    return render_template('sell.html')
+
+@app.route('/car/<int:car_id>/comment', methods=['POST'])
+def add_comment(car_id):
+    comment_text = request.form.get('comment')
+    user = session.get('user', 'Anonymous')
+    
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            # VULNERABLE CODE: Stored XSS potential if inputs not sanitized
+            # Here we protect against SQL Injection with parameterized query,
+            # but the stored text will be rendered unsanitized in the template.
+            query = "INSERT INTO comments (car_id, user, comment_text) VALUES (%s, %s, %s)"
+            cursor.execute(query, (car_id, user, comment_text))
+            conn.commit()
+        except mysql.connector.Error as err:
+            return f"Error posting comment: {err}"
+        finally:
+            conn.close()
+            
+    return redirect(url_for('car_detail', car_id=car_id))
 
 @app.route('/logout')
 def logout():
