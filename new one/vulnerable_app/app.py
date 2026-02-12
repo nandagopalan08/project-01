@@ -1,14 +1,14 @@
 from flask import Flask, request, render_template, redirect, url_for, session, render_template_string
 import mysql.connector
 import os
+import datetime
 
 app = Flask(__name__)
 app.secret_key = 'vulnerable_secret'
 
 # Database Connection Config
-# Database Connection Config
 db_config = {
-    'host': 'localhost',
+    'host': os.getenv('DB_HOST', 'localhost'),
     'user': 'root',
     'password': os.getenv('DB_PASSWORD', ''),  # Use environment variable
     'database': 'vulnerable_db'
@@ -19,11 +19,52 @@ def get_db_connection():
         conn = mysql.connector.connect(**db_config)
         return conn
     except mysql.connector.Error as err:
+        print(f"Error connecting to DB: {err}")
         return None
+
+def log_login_attempt(username, status, ip):
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            query = "INSERT INTO login_logs (username, ip_address, status) VALUES (%s, %s, %s)"
+            cursor.execute(query, (username, ip, status))
+            conn.commit()
+        except mysql.connector.Error as err:
+            print(f"Error logging login: {err}")
+        finally:
+            conn.close()
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    cars = []
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM cars")
+            cars = cursor.fetchall()
+        except mysql.connector.Error as err:
+            print(f"Error fetching cars: {err}")
+        finally:
+            conn.close()
+    return render_template('index.html', cars=cars)
+
+@app.route('/car/<int:car_id>')
+def car_detail(car_id):
+    car = None
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM cars WHERE car_id = %s", (car_id,))
+            car = cursor.fetchone()
+        finally:
+            conn.close()
+    
+    if car:
+        return render_template('car_details.html', car=car)
+    return "Car not found", 404
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -31,6 +72,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        client_ip = request.remote_addr
         
         conn = get_db_connection()
         if conn:
@@ -39,14 +81,24 @@ def login():
             query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
             try:
                 cursor.execute(query) # Intentionally vulnerable
-                user = cursor.fetchone()
+                # If multiple results returned (e.g. ' OR '1'='1), we take the first one
+                user = cursor.fetchone() 
+                
                 if user:
                     session['user'] = user['username']
-                    return redirect(url_for('dashboard'))
+                    session['role'] = user['role']
+                    log_login_attempt(username, 'Success', client_ip)
+                    
+                    if user['role'] == 'admin':
+                        return redirect(url_for('admin_dashboard'))
+                    else:
+                        return redirect(url_for('home'))
                 else:
                     error = "Invalid Credentials"
+                    log_login_attempt(username, 'Failed', client_ip)
             except mysql.connector.Error as err:
                 error = f"Database Error: {err}"
+                log_login_attempt(username, f"Error: {err}", client_ip)
             finally:
                 cursor.close()
                 conn.close()
@@ -55,28 +107,59 @@ def login():
 
     return render_template('login.html', error=error)
 
-@app.route('/dashboard')
-def dashboard():
-    if 'user' in session:
-        return render_template('dashboard.html', username=session['user'])
-    return redirect(url_for('login'))
+@app.route('/admin')
+def admin_dashboard():
+    # Only allow admin access
+    if 'user' not in session or session.get('role') != 'admin':
+        return redirect(url_for('login'))
+        
+    login_logs = []
+    attacks = [] # Mock or fetch from security_db if possible
+    
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor(dictionary=True)
+            
+            # Fetch Login Logs
+            cursor.execute("SELECT * FROM login_logs ORDER BY timestamp DESC LIMIT 50")
+            login_logs = cursor.fetchall()
+            
+            # Try to fetch attacks from security_db if the user has permissions
+            # We use a try-except block here specifically for the cross-db query
+            try:
+                cursor.execute("SELECT * FROM security_db.attacks ORDER BY attack_time DESC LIMIT 50")
+                attacks = cursor.fetchall()
+            except mysql.connector.Error:
+                # Fallback if cannot access security_db or table doesn't exist
+                attacks = []
+                
+        finally:
+            conn.close()
+
+    return render_template('admin.html', username=session['user'], login_logs=login_logs, attacks=attacks)
 
 @app.route('/logout')
 def logout():
     session.pop('user', None)
+    session.pop('role', None)
     return redirect(url_for('login'))
 
 @app.route('/search')
 def search():
     query = request.args.get('q', '')
     # VULNERABLE CODE: Reflected XSS
-    # Taking input from URL and rendering it directly without escaping
     return render_template_string(f'''
         {{% extends "base.html" %}}
         {{% block content %}}
-        <h1>Search Results</h1>
-        <p>You searched for: {query}</p>
-        <a href="/">Back Home</a>
+        <div class="row">
+            <div class="col-md-12">
+                <h1>Search Results</h1>
+                <p>You searched for: {query}</p>
+                <div class="alert alert-info">No cars found matching your criteria.</div>
+                <a href="/" class="btn btn-secondary">Back to Cars</a>
+            </div>
+        </div>
         {{% endblock %}}
     ''') 
 

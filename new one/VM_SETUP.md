@@ -1,4 +1,4 @@
-# Manual VM Setup Guide (Lubuntu/Ubuntu)
+# Manual VM Setup Guide (Lubuntu)
 
 Since you already have a **Lubuntu VM** installed, follow these steps to host the **Vulnerable App** inside it.
 

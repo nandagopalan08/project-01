@@ -5,7 +5,7 @@ import os
 def init_db():
     print("Initializing Database...")
     config = {
-        'host': 'localhost',
+        'host': os.getenv('DB_HOST', 'localhost'),
         'user': 'root',
         'password': os.getenv('DB_PASSWORD', '') # Default to env var or empty
     }

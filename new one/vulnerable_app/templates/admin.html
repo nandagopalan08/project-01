@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-header">
+    <h1><i class="fas fa-shield-alt" style="color: var(--primary);"></i> Security Dashboard</h1>
+    <div>
+        <span class="badge badge-success">System Active</span>
+        <span class="badge badge-warning">Monitoring Enabled</span>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Login History Panel -->
+    <div class="card">
+        <h3><i class="fas fa-history"></i> Recent Login Activity</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">Tracks all successful and failed login attempts.</p>
+
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>IP Address</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in login_logs %}
+                    <tr>
+                        <td>#{{ log.log_id }}</td>
+                        <td>{{ log.username }}</td>
+                        <td>{{ log.ip_address }}</td>
+                        <td>
+                            {% if log.status == 'Success' %}
+                            <span class="badge badge-success">Success</span>
+                            {% else %}
+                            <span class="badge badge-danger">{{ log.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.timestamp }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center;">No login activity recorded.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Attack Logs Panel -->
+    <div class="card">
+        <h3><i class="fas fa-bug"></i> Detected Attacks (From Security Gateway)</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">Synchronized from Security Database.</p>
+
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Payload</th>
+                        <th>IP Source</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attack in attacks %}
+                    <tr>
+                        <td>#{{ attack.attack_id }}</td>
+                        <td><span class="badge badge-danger">{{ attack.attack_type }}</span></td>
+                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            <code>{{ attack.payload }}</code>
+                        </td>
+                        <td>{{ attack.ip_address }}</td>
+                        <td>{{ attack.attack_time }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center;">No attacks detected (or connection to Security DB
+                            failed).</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

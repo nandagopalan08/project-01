@@ -52,3 +52,32 @@ CREATE TABLE IF NOT EXISTS login_attempts (
 
 -- Register the default vulnerable app
 INSERT INTO vulnerable_applications (app_name, app_url) VALUES ('Vulnerable Web App', 'http://localhost:5000');
+
+-- Cars Table for Car Selling App
+CREATE TABLE IF NOT EXISTS cars (
+    car_id INT AUTO_INCREMENT PRIMARY KEY,
+    make VARCHAR(50),
+    model VARCHAR(50),
+    year INT,
+    price DECIMAL(10, 2),
+    image_url VARCHAR(255),
+    description TEXT
+);
+
+-- Login History/Logs
+CREATE TABLE IF NOT EXISTS login_logs (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50),
+    ip_address VARCHAR(50),
+    status VARCHAR(20), -- 'Success' or 'Failed'
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Dummy Data for Cars
+INSERT INTO cars (make, model, year, price, image_url, description) VALUES 
+('Tesla', 'Model S', 2023, 79990.00, 'https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=1000&auto=format&fit=crop', 'Electric luxury sedan with autopilot capabilities.'),
+('Porsche', '911 Carrera', 2022, 115000.00, 'https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=1000&auto=format&fit=crop', 'Iconic sports car with rear-engine layout.'),
+('BMW', 'M3 Competition', 2024, 85000.00, 'https://images.unsplash.com/photo-1555215695-3004980adade?q=80&w=1000&auto=format&fit=crop', 'High-performance sedan for the ultimate driving experience.'),
+('Mercedes', 'AMG GT', 2023, 110000.00, 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?q=80&w=1000&auto=format&fit=crop', 'Luxury coupe with aggressive styling and V8 power.'),
+('Ferrari', 'F8 Tributo', 2022, 280000.00, 'https://images.unsplash.com/photo-1592198084033-aade902d1aae?q=80&w=1000&auto=format&fit=crop', 'Mid-engine V8 supercar from Maranello.'),
+('Lamborghini', 'Huracan', 2023, 250000.00, 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?q=80&w=1000&auto=format&fit=crop', 'V10 naturally aspirated monster.');

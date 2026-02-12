@@ -2,19 +2,32 @@
 
 {% block content %}
 <div class="hero">
-    <h1>Welcome to the Vulnerable Client App</h1>
-    <p>This application is intentionally designed with security flaws for educational purposes.</p>
+    <h1>Find Your Dream Car</h1>
+    <p>Premium vehicles for premium people. Browse our collection below.</p>
 
-    <div class="actions">
-        <a href="/login" class="btn btn-primary">Test SQL Injection (Login)</a>
+    <!-- SEARCH WIDGET (With Vulnerability) -->
+    <div style="max-width: 500px; margin: 2rem auto;">
+        <form action="/search" method="GET" style="display: flex; gap: 10px;">
+            <input type="text" name="q" placeholder="Start typing to search (e.g., Tesla)...">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+</div>
 
-        <div class="xss-test">
-            <h3>Test Reflected XSS</h3>
-            <form action="/search" method="GET">
-                <input type="text" name="q" placeholder="Enter search term (try <script>alert(1)</script>)">
-                <button type="submit" class="btn btn-secondary">Search</button>
-            </form>
+<div class="car-grid">
+    {% for car in cars %}
+    <div class="car-card">
+        <img src="{{ car.image_url }}" alt="{{ car.make }} {{ car.model }}" class="car-image">
+        <div class="car-details">
+            <h3 class="car-title">{{ car.make }} {{ car.model }}</h3>
+            <div class="car-year">{{ car.year }}</div>
+            <div class="car-price">${{ "{:,.2f}".format(car.price) }}</div>
+            <p class="car-description">{{ car.description }}</p>
+            <a href="{{ url_for('car_detail', car_id=car.car_id) }}" class="btn btn-primary btn-block">View Details</a>
         </div>
     </div>
+    {% else %}
+    <p>No cars available at the moment. Please check the database connection.</p>
+    {% endfor %}
 </div>
 {% endblock %}

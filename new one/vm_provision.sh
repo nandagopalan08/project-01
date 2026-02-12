@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# VM Provisioning Script for Lubuntu/Ubuntu
+# VM Provisioning Script for Lubuntu
 # Run this script inside the VM to set up the environment.
 
 echo "--- Updating Package Lists ---"

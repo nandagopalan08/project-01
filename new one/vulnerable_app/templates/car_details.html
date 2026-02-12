@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card detail-container">
+    <div class="detail-image">
+        <img src="{{ car.image_url }}" alt="{{ car.make }} {{ car.model }}">
+        <br><br>
+        <a href="/" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Cars</a>
+    </div>
+
+    <div class="detail-info">
+        <h1>{{ car.make }} {{ car.model }} ({{ car.year }})</h1>
+        <div class="detail-price">${{ "{:,.2f}".format(car.price) }}</div>
+
+        <p class="detail-desc">
+            {{ car.description }}
+        </p>
+
+        <hr style="border-color: rgba(255,255,255,0.1); margin: 2rem 0;">
+
+        <h3>Features</h3>
+        <ul>
+            <li>Premium Sound System</li>
+            <li>Leather Seats</li>
+            <li>Autopilot Enabled</li>
+            <li>0-60 in 3.2s</li>
+        </ul>
+
+        <br>
+        <a href="#" class="btn btn-primary btn-block">Contact Seller</a>
+    </div>
+</div>
+
+<!-- VULNERABLE COMMENT SECTION (XSS Potential) -->
+<div class="xss-test">
+    <h3>User Reviews</h3>
+    <p><i>Implement review system here... (Try injecting script in search bar instead)</i></p>
+</div>
+{% endblock %}

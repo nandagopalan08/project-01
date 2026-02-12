@@ -5,10 +5,25 @@ Write-Host "The VULNERABLE APP must be running inside your Lubuntu VM."
 Write-Host "--------------------------------------"
 
 # 1. Configuration
-$vmIP = Read-Host "Enter the IP Address of your Lubuntu VM (e.g., 192.168.1.50) [Check with 'hostname -I' in VM]"
-if ([string]::IsNullOrWhiteSpace($vmIP)) {
+$rawVmIP = Read-Host "Enter the IP Address of your Lubuntu VM (e.g., 192.168.1.50) [Check with 'hostname -I' in VM]"
+
+if ([string]::IsNullOrWhiteSpace($rawVmIP)) {
     Write-Host "VM IP is required. Exiting..." -ForegroundColor Red
     exit
+}
+
+# Fix: Handle case where user pastes multiple IPs (e.g. "10.0.2.15 fd17:...")
+$vmIP = $rawVmIP.Split(' ', [StringSplitOptions]::RemoveEmptyEntries)[0].Trim()
+
+# Warning for NAT IP
+if ($vmIP -eq "10.0.2.15") {
+    Write-Host "--------------------------------------------------------" -ForegroundColor Yellow
+    Write-Host "WARNING: You entered '10.0.2.15'." -ForegroundColor Red
+    Write-Host "This is usually the default NAT IP and is NOT reachable from Windows." -ForegroundColor Yellow
+    Write-Host "Please ensure your VM Network is set to 'Bridged Adapter' in VirtualBox." -ForegroundColor Yellow
+    Write-Host "If you use Bridged, your IP should look like 192.168.x.x" -ForegroundColor Yellow
+    Write-Host "--------------------------------------------------------" -ForegroundColor Yellow
+    Start-Sleep -Seconds 3
 }
 
 $dbPassword = Read-Host "Enter VM MySQL 'root' Password (default is 'root' if using vm_provision.sh)"

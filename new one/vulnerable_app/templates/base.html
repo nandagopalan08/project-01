@@ -1,23 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vulnerable App</title>
+    <title>CarHub - Premium Cars</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="/" class="logo">VulnerableClient</a>
+            <a href="/" class="logo"><i class="fas fa-car-side"></i> CarHub</a>
             <ul class="nav-links">
-                <li><a href="/">Home</a></li>
+                <li><a href="/">Cars</a></li>
                 {% if session.get('user') %}
-                    <li><a href="/dashboard">Dashboard</a></li>
-                    <li><a href="/logout">Logout</a></li>
+                {% if session.get('role') == 'admin' %}
+                <li><a href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
                 {% else %}
-                    <li><a href="/login">Login</a></li>
+                <li><a href="#">My Profile</a></li>
+                {% endif %}
+                <li><a href="/logout">Logout</a></li>
+                {% else %}
+                <li><a href="/login">Login</a></li>
                 {% endif %}
             </ul>
         </div>
@@ -28,6 +36,6 @@
             {% block content %}{% endblock %}
         </div>
     </div>
-
 </body>
+
 </html>
