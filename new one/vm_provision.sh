@@ -14,23 +14,37 @@ echo "--- Configuring MySQL ---"
 sudo systemctl start mysql
 sudo systemctl enable mysql
 
-# Secure MySQL (Simulated - setting root pass to 'root')
+# Secure MySQL and Enable Remote Access
 # Allow remote root login (ONLY FOR LAB ENVIRONMENT)
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';"
+echo "Configuring MySQL Users..."
 sudo mysql -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';"
+sudo mysql -e "ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';"
 sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;"
 sudo mysql -e "FLUSH PRIVILEGES;"
 
+# Also ensure localhost root is usable
+sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';"
+sudo mysql -e "FLUSH PRIVILEGES;"
+
 # Allow remote connections in my.cnf
-# By default, MySQL binds to 127.0.0.1. We need to comment out bind-address or set to 0.0.0.0
+# By default, MySQL binds to 127.0.0.1. We need to set to 0.0.0.0
 CONF_FILE=$(find /etc/mysql -name "mysqld.cnf" | head -n 1)
 if [ -z "$CONF_FILE" ]; then
     CONF_FILE="/etc/mysql/mysql.conf.d/mysqld.cnf"
 fi
 
-echo "Modifying MySQL Config at $CONF_FILE to allow remote connections..."
-sudo sed -i 's/bind-address.*/bind-address = 0.0.0.0/' "$CONF_FILE"
-sudo systemctl restart mysql
+if [ -f "$CONF_FILE" ]; then
+    echo "Modifying MySQL Config at $CONF_FILE to allow remote connections..."
+    # Replace bind-address line, handling comments
+    sudo sed -i 's/^#\?bind-address.*/bind-address = 0.0.0.0/' "$CONF_FILE"
+    # Also ensure mysqlx-bind-address is handled if present
+    sudo sed -i 's/^#\?mysqlx-bind-address.*/mysqlx-bind-address = 0.0.0.0/' "$CONF_FILE"
+    
+    cat "$CONF_FILE" | grep "bind-address"
+    sudo systemctl restart mysql
+else
+    echo "WARNING: MySQL config file not found!"
+fi
 
 echo "--- Setting up Database Schema ---"
 # Check if database/setup.sql exists

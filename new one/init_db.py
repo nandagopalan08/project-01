@@ -5,9 +5,9 @@ import os
 def init_db():
     print("Initializing Database...")
     config = {
-        'host': os.getenv('DB_HOST', 'localhost'),
+        'host': os.getenv('DB_HOST', '192.168.1.5'),
         'user': 'root',
-        'password': os.getenv('DB_PASSWORD', '') # Default to env var or empty
+        'password': os.getenv('DB_PASSWORD', 'root') # Default to 'root' as per VM setup
     }
     
     # Try connecting with default config
