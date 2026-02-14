@@ -3,9 +3,27 @@
 {% block content %}
 <div class="auth-wrapper">
     <div class="auth-card" style="border-color: var(--danger); box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);">
-        <div style="font-size: 4rem; margin-bottom: 1rem; color: var(--danger);">
+        <div style="font-size: 4rem; margin-bottom: 1rem; color: var(--danger); animation: pulse 2s infinite;">
             <i class="fas fa-shield-alt"></i>
         </div>
+        <style>
+            @keyframes pulse {
+                0% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+
+                50% {
+                    transform: scale(1.1);
+                    opacity: 0.8;
+                }
+
+                100% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+        </style>
         <h1 style="color: var(--danger); margin-bottom: 1rem;">ACCESS DENIED</h1>
         <p style="font-size: 1.2rem; color: #fca5a5; margin-bottom: 2rem;">
             Your request has been blocked by the Security Gateway.

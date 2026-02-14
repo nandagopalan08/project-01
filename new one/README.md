@@ -65,6 +65,14 @@ If you cannot run a VM, you can simulate the environment locally:
     *   **Windows**: `.\start.ps1`
     *   **Linux/Mac**: `bash start.sh` (Create this if needed, or run apps manually)
 
+## Troubleshooting
+**Database Connection Failed in VM?**
+If the app says "Database Connection Failed", run this command INSIDE the VM terminal:
+```bash
+bash /vagrant/fix_vm_db.sh
+```
+This forces a reset of the MySQL credentials and updates the tables.
+
 ## Usage
 
 1.  **Attack**: Navigate to the Security Gateway ([http://localhost:5001](http://localhost:5001)) which proxies traffic to the Vulnerable App.

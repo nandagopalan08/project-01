@@ -45,9 +45,12 @@ def home():
             cursor.execute("SELECT * FROM cars")
             cars = cursor.fetchall()
         except mysql.connector.Error as err:
-            print(f"Error fetching cars: {err}")
+            return f"Database Error: {err}"
         finally:
             conn.close()
+    else:
+        return "<h1>Database Connection Failed</h1><p>Ensure MySQL is running and credentials are correct.</p><p>Check the terminal for detailed error logs.</p>"
+        
     return render_template('index.html', cars=cars)
 
 @app.route('/car/<int:car_id>')

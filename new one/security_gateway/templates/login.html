@@ -1,33 +1,206 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="auth-wrapper">
-    <div class="auth-card">
-        <h2 style="text-align:center; color: var(--primary);"><i class="fas fa-user-shield"></i> Security Admin Login
-        </h2>
-        <p style="text-align:center; margin-bottom: 2rem; color: #94a3b8;">Access the monitoring console.</p>
+<style>
+    .login-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        padding: 2rem 0;
+    }
 
-        {% if error %}
-        <div
-            style="background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 1rem; border-radius: 4px; border: 1px solid #ef4444; margin-bottom: 1rem;">
-            {{ error }}
+    .hero-text {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInDown 0.8s ease-out;
+    }
+
+    .hero-text h1 {
+        color: var(--primary);
+        font-size: 3.5rem;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .hero-text p {
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .split-cards {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+        max-width: 1000px;
+    }
+
+    .access-card {
+        background: var(--card-bg);
+        padding: 2.5rem;
+        border-radius: 16px;
+        flex: 1;
+        min-width: 300px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .access-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .client-card {
+        border: 1px solid var(--primary);
+        background: linear-gradient(145deg, rgba(16, 185, 129, 0.1) 0%, rgba(15, 23, 42, 1) 100%);
+    }
+
+    .admin-card {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .icon-wrapper {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .card-title {
+        text-align: center;
+        color: white;
+        margin: 0 0 1rem 0;
+        font-size: 1.8rem;
+    }
+
+    .card-desc {
+        text-align: center;
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .glow-btn {
+        display: block;
+        text-align: center;
+        text-decoration: none;
+        padding: 1rem;
+        font-size: 1.2rem;
+        border-radius: 8px;
+        background: var(--primary);
+        color: #020617;
+        font-weight: 700;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+        border: none;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .glow-btn:hover {
+        background: #34d399;
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+        transform: scale(1.02);
+    }
+
+    .admin-btn {
+        width: 100%;
+        background-color: transparent;
+        border: 1px solid var(--text-secondary);
+        color: var(--text-primary);
+        padding: 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .admin-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="login-container">
+    <div class="hero-text">
+        <h1><i class="fas fa-shield-alt"></i> Security Gateway</h1>
+        <p>Next-Generation Web Application Firewall (WAF) & Real-time Threat Intelligence System protecting your assets.
+        </p>
+    </div>
+
+    <div class="split-cards">
+
+        <!-- Public/Client Access -->
+        <div class="access-card client-card">
+            <div class="icon-wrapper">
+                <i class="fas fa-user-check" style="color: var(--primary);"></i>
+            </div>
+            <h2 class="card-title">Authorized Access</h2>
+            <p class="card-desc">
+                Access the protected web application ecosystem. All traffic is monitored, analyzed, and filtered in
+                real-time for security compliance.
+            </p>
+            <a href="/" class="glow-btn">
+                <i class="fas fa-rocket"></i> Enter Secure App
+            </a>
+            <div style="text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: #34d399;">
+                <i class="fas fa-shield-check"></i> 256-bit Encryption Active
+            </div>
         </div>
-        {% endif %}
 
-        <form method="POST">
-            <div class="form-group">
-                <label for="username">Admin Username</label>
-                <input type="text" id="username" name="username" required placeholder="Enter admin username">
+        <!-- Admin Login -->
+        <div class="access-card admin-card">
+            <div class="icon-wrapper">
+                <i class="fas fa-user-shield" style="color: #f87171;"></i>
             </div>
+            <h2 class="card-title">Admin Console</h2>
+            <p class="card-desc">
+                Restricted area for security administrators. Configure rules, view attack logs, and manage firewall
+                policies.
+            </p>
 
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="Enter password">
+            {% if error %}
+            <div
+                style="background: rgba(239, 68, 68, 0.1); color: #f87171; padding: 0.75rem; border-radius: 6px; border: 1px solid rgba(239,68,68,0.3); margin-bottom: 1rem; text-align: center; font-size: 0.9rem;">
+                <i class="fas fa-exclamation-circle"></i> {{ error }}
             </div>
+            {% endif %}
 
-            <button type="submit" class="btn btn-primary" style="background-color: var(--primary);">Secure
-                Login</button>
-        </form>
+            <form method="POST">
+                <div class="form-group">
+                    <label for="username">Admin Username</label>
+                    <input type="text" id="username" name="username" required placeholder="Enter username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Security Token / Password</label>
+                    <input type="password" id="password" name="password" required placeholder="••••••••">
+                </div>
+
+                <button type="submit" class="admin-btn">
+                    <i class="fas fa-key"></i> Authenticate
+                </button>
+            </form>
+        </div>
+
     </div>
 </div>
 {% endblock %}
