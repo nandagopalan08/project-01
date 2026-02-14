@@ -12,13 +12,16 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Insert dummy data into vulnerable app
-INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin');
-INSERT INTO users (username, password, role) VALUES ('user', 'password', 'user');
+-- Use INSERT IGNORE to avoid duplicate entry errors if data persists or re-run
+INSERT IGNORE INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin');
+INSERT IGNORE INTO users (username, password, role) VALUES ('user', 'password', 'user');
 
 -- Create Security Database
 CREATE DATABASE IF NOT EXISTS security_db;
 USE security_db;
 
+DROP TABLE IF EXISTS attacks;
+DROP TABLE IF EXISTS vulnerable_applications;
 CREATE TABLE IF NOT EXISTS vulnerable_applications (
     app_id INT AUTO_INCREMENT PRIMARY KEY,
     app_name VARCHAR(100) NOT NULL,
@@ -36,6 +39,7 @@ CREATE TABLE IF NOT EXISTS attacks (
     FOREIGN KEY (app_id) REFERENCES vulnerable_applications(app_id) ON DELETE SET NULL
 );
 
+DROP TABLE IF EXISTS security_logs;
 CREATE TABLE IF NOT EXISTS security_logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     action_taken VARCHAR(50),
@@ -43,6 +47,7 @@ CREATE TABLE IF NOT EXISTS security_logs (
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+DROP TABLE IF EXISTS login_attempts;
 CREATE TABLE IF NOT EXISTS login_attempts (
     attempt_id INT AUTO_INCREMENT PRIMARY KEY,
     ip_address VARCHAR(50),
@@ -52,12 +57,14 @@ CREATE TABLE IF NOT EXISTS login_attempts (
 );
 
 -- Register the default vulnerable app
-INSERT INTO vulnerable_applications (app_name, app_url) VALUES ('Vulnerable Web App', 'http://localhost:5000');
+INSERT INTO vulnerable_applications (app_name, app_url) SELECT 'Vulnerable Web App', 'http://localhost:5000' WHERE NOT EXISTS (SELECT * FROM vulnerable_applications WHERE app_name = 'Vulnerable Web App');
 
 -- Switch back to Vulnerable Database for App Data
 USE vulnerable_db;
 
 -- Cars Table for Car Selling App
+DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS cars;
 CREATE TABLE IF NOT EXISTS cars (
     car_id INT AUTO_INCREMENT PRIMARY KEY,
     make VARCHAR(50),
@@ -69,6 +76,7 @@ CREATE TABLE IF NOT EXISTS cars (
 );
 
 -- Login History/Logs
+DROP TABLE IF EXISTS login_logs;
 CREATE TABLE IF NOT EXISTS login_logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50),
