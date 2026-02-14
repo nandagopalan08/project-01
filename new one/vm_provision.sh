@@ -17,13 +17,14 @@ sudo systemctl enable mysql
 # Secure MySQL and Enable Remote Access
 # Allow remote root login (ONLY FOR LAB ENVIRONMENT)
 echo "Configuring MySQL Users..."
-sudo mysql -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';"
-sudo mysql -e "ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';"
+# Use default authentication plugin (compatible with modern MySQL 8.0+)
+sudo mysql -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY 'root';"
+sudo mysql -e "ALTER USER 'root'@'%' IDENTIFIED BY 'root';"
 sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;"
 sudo mysql -e "FLUSH PRIVILEGES;"
 
-# Also ensure localhost root is usable
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';"
+# Also ensure localhost root is usable with default auth
+sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';"
 sudo mysql -e "FLUSH PRIVILEGES;"
 
 # Allow remote connections in my.cnf

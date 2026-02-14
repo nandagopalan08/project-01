@@ -22,6 +22,12 @@ def init_db():
             conn = mysql.connector.connect(**config)
         except mysql.connector.Error as err:
             print(f"Error connecting to MySQL: {err}")
+            if err.errno == 2059:
+                print("\n[!] Authentication Plugin Error: The server requested an authentication method unknown to the client.")
+                print("    Please run the updated 'vm_provision.sh' inside the VM to fix the user privileges.")
+            elif err.errno == 1130:
+                print("\n[!] Host Not Allowed Error: The MySQL server rejected the connection from this IP.")
+                print("    Please ensure you ran the GRANT commands in 'vm_provision.sh' inside the VM.")
             return
 
     cursor = conn.cursor()
