@@ -7,25 +7,26 @@ from detection import analyze_request
 
 app = Flask(__name__)
 
-# Config
+
 # Config
 VULNERABLE_APP_URL = os.getenv('VULNERABLE_APP_URL', "http://127.0.0.1:5000")
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'localhost'),
     'user': 'admin',
     'password': 'admin123',
-    'database': 'security_db'
+    'database': 'security_db',
+    'auth_plugin': 'mysql_native_password' # Explicitly requested for compatibility
 }
 
 def get_db():
     try:
         return mysql.connector.connect(**DB_CONFIG)
-    except:
+    except mysql.connector.Error as err:
+        print(f"Error connecting to Security DB: {err}")
+        print(f"Debug: {DB_CONFIG['host']} | {DB_CONFIG['user']}")
         return None
 
-# Helper to get App ID (Assuming single app for now, or finding by URL)
 def get_app_id():
-    # consistent ID for the demo
     return 1 
 
 def log_attack(attack_type, payload):
@@ -34,7 +35,7 @@ def log_attack(attack_type, payload):
         try:
             cursor = conn.cursor()
             app_id = get_app_id()
-            # Ensure app exists (optional, mostly guaranteed by setup.sql)
+            
             
             query = "INSERT INTO attacks (attack_type, payload, ip_address, app_id) VALUES (%s, %s, %s, %s)"
             cursor.execute(query, (attack_type, payload, request.remote_addr, app_id))
@@ -62,20 +63,16 @@ def check_brute_force_lock(ip):
     if not conn: return False
     cursor = conn.cursor(dictionary=True)
     
-    # Get latest attempt for IP
+
     cursor.execute("SELECT * FROM login_attempts WHERE ip_address = %s ORDER BY last_attempt DESC LIMIT 1", (ip,))
     record = cursor.fetchone()
     
     is_locked_out = False
     
     if record and record['is_locked']:
-        # Check if lock time expired (e.g., 5 mins)
         if record['last_attempt'] and (datetime.datetime.now() - record['last_attempt']).seconds < 300:
             is_locked_out = True
         else:
-            # Unlock - Create new record or update? 
-            # Strategy: Insert a clean record or update existing to unlock. 
-            # Let's update the existing one to unlock it.
             cursor.execute("UPDATE login_attempts SET is_locked = FALSE, attempt_count = 0 WHERE attempt_id = %s", (record['attempt_id'],))
             conn.commit()
             log_security_action("Unlock IP", f"Lock expired for {ip}")
@@ -93,7 +90,7 @@ def update_login_attempt(ip, is_success):
     now = datetime.datetime.now()
     
     if is_success:
-        # Reset count on success
+        
         if record:
              cursor.execute("UPDATE login_attempts SET attempt_count = 0, is_locked = FALSE, last_attempt = %s WHERE attempt_id = %s", (now, record['attempt_id']))
     else:
@@ -110,9 +107,7 @@ def update_login_attempt(ip, is_success):
     conn.commit()
     conn.close()
 
-app.secret_key = 'security_gateway_secret_key'  # Change this in production!
-
-# ... (Database Config and Helpers remain same) ...
+app.secret_key = 'security_gateway_secret_key'  
 
 @app.route('/gateway_login', methods=['GET', 'POST'])
 def gateway_login():
@@ -121,7 +116,7 @@ def gateway_login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # Hardcoded Admin Credentials for Gateway (Separate from Vulnerable App)
+        
         if username == 'admin' and password == 'securep@ss': 
             session['security_admin'] = True
             return redirect(url_for('admin_panel'))
@@ -147,7 +142,7 @@ def admin_panel():
     if conn:
         try:
             cursor = conn.cursor(dictionary=True)
-            # Fetch Attacks
+            
             cursor.execute("""
                 SELECT a.*, v.app_name 
                 FROM attacks a 
@@ -156,7 +151,7 @@ def admin_panel():
             """)
             attacks = cursor.fetchall()
             
-            # Fetch Security Logs
+            
             cursor.execute("SELECT * FROM security_logs ORDER BY timestamp DESC")
             security_logs = cursor.fetchall()
         except mysql.connector.Error as err:
@@ -166,26 +161,25 @@ def admin_panel():
             
     return render_template('admin.html', attacks=attacks, security_logs=security_logs)
 
-# Catch-all Proxy Route
+
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST'])
 @app.route('/<path:path>', methods=['GET', 'POST'])
 def proxy(path):
     target_url = f"{VULNERABLE_APP_URL}/{path}"
     
-    # 1. Security Check: Attack Signatures
+    
     is_malicious, attack_type, payload = analyze_request(request)
     if is_malicious:
         log_attack(attack_type, payload)
         log_security_action("Block Request", f"Blocked {attack_type} from {request.remote_addr}")
         return render_template('blocked.html', type=attack_type), 403
 
-    # 2. Security Check: Rate Limiting (Brute Force)
+    
     if path == 'login' and request.method == 'POST':
         if check_brute_force_lock(request.remote_addr):
             return render_template('blocked.html', type="Brute Force Lockout"), 403
 
-    # 3. Forward Request
-    # Exclude headers that might cause issues
+    
     excluded_headers = ['Host', 'Content-Length']
     headers = {k: v for k, v in request.headers if k not in excluded_headers}
     
@@ -197,19 +191,17 @@ def proxy(path):
             data=request.form,
             params=request.args,
             cookies=request.cookies,
-            allow_redirects=False # Important to capture 302
+            allow_redirects=False 
         )
         
-        # 4. Post-Response Analysis (Brute Force)
+        
         if path == 'login' and request.method == 'POST':
             if resp.status_code == 302:
-                # Redirect usually means success in our app
                 update_login_attempt(request.remote_addr, True)
             else:
-                # 200 OK usually means the page reloaded with an error
+                
                 update_login_attempt(request.remote_addr, False)
 
-        # Build Flask response
         excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
         headers = [(name, value) for (name, value) in resp.raw.headers.items()
                    if name.lower() not in excluded_headers]

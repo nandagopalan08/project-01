@@ -1,58 +1,56 @@
-# Manual VM Setup Guide (Lubuntu)
+# VM Configuration Guide (Lubuntu)
 
-Since you already have a **Lubuntu VM** installed, follow these steps to host the **Vulnerable App** inside it.
+This guide helps you set up the project to run in a **Host (Windows)** -> **VM (Lubuntu)** environment.
 
-## Step 1: Network Configuration (Critical)
-1.  Shut down your VM.
-2.  Open **VirtualBox**.
-3.  Right-click your VM -> **Settings** -> **Network**.
-4.  Change **Attached to** to **Bridged Adapter**.
-5.  Select your active Windows network adapter (Wi-Fi or Ethernet).
-6.  Start the VM.
-7.  Open a terminal in the VM and run:
+## 1. Network Setup (First Time Only)
+1.  **Shut Down** your VM.
+2.  In VirtualBox: **Settings** -> **Network**.
+3.  Set **Attached to** -> **Bridged Adapter**.
+4.  Start the VM.
+5.  In VM Terminal, check IP: `hostname -I` (Should be something like `192.168.1.x`).
+
+## 2. Database Initialization (Crucial!)
+You must initialize the database inside the VM for remote access.
+
+1.  Copy the `database` folder (specifically `reinit_db.sh` and `setup.sql`) to your VM.
+2.  Open a terminal inside the VM in that folder.
+3.  Run the **Re-initialization Script**:
     ```bash
-    hostname -I
+    bash reinit_db.sh
     ```
-    *Note down this IP address (e.g., 192.168.1.xxx).*
+    *   **What this does**:
+        *   Restarts MySQL.
+        *   Sets `bind-address = 0.0.0.0` (allows remote connections).
+        *   Creates user `admin` with password `admin123` (using `mysql_native_password` plugin).
+        *   Applies the production-ready schema (`setup.sql`).
 
-## Step 2: Transfer Project Files
-You need to get the project files into the VM.
-*   **Option A (Shared Folders)**: Install VirtualBox Guest Additions and mount a shared folder.
-*   **Option B (Copy/Paste)**: If Drag & Drop is enabled (Settings -> General -> Advanced), drag the project folder.
-*   **Option C (Download)**: If you possess the source as a zip, download it inside the VM.
+## 3. Run the Vulnerable App (Inside VM)
+The vulnerable application needs to run inside the VM to simulate the target server.
 
-## Step 3: Provision the VM
-Once the files are in the VM (e.g., in `~/project`), open a terminal in that folder and run:
-
-1.  **Make the script executable**:
+1.  In the VM terminal:
     ```bash
-    chmod +x vm_provision.sh
+    python3 vulnerable_app/app.py
     ```
-2.  **Run the script**:
-    ```bash
-    ./vm_provision.sh
+    *Ensure it says `Running on http://0.0.0.0:5000` (NOT 127.0.0.1).*
+
+## 4. Start the Project (On Windows Host)
+1.  Open **PowerShell** in your project folder.
+2.  Run the **Diagnostic Tool** first to verify connectivity:
+    ```powershell
+    python diagnose_connection.py
     ```
-    *This will install Python, MySQL, configure the database users, and set up the schema.*
-
-## Step 4: Start the Vulnerable App (Inside VM)
-After provisioning is complete, keep the terminal open and run:
-
-```bash
-python3 vulnerable_app/app.py
-```
-*You should see: `Running on http://0.0.0.0:5000`*
-
-## Step 5: Start the Security Gateway (On Windows Host)
-Now that the VM is running the app:
-
-1.  Open **PowerShell** on Windows in the project folder.
-2.  Run:
+3.  If diagnostics pass, run the main startup script:
     ```powershell
     .\start.ps1
     ```
-3.  Enter the **VM IP Address** you got in Step 1.
-4.  The Security Gateway will launch and connect to the VM.
+4.  Enter the **VM IP Address** when prompted.
 
 ## Troubleshooting
-*   **Connection Failed**: Try pinging the VM from Windows (`ping <VM_IP>`). If it fails, check your Firewall or Ensure Bridged Adapter is selected.
-*   **MySQL Connection Error**: Ensure `vm_provision.sh` ran successfully and you haven't changed the root password manually. The script sets it to `root`.
+*   **"MySQL Login FAILED"**: 
+    *   Run `bash reinit_db.sh` inside the VM again. This fixes permissions and plugins.
+*   **"MySQL Port 3306 UNREACHABLE"**: 
+    *   Check VM Firewall: `sudo ufw allow 3306` inside VM.
+    *   Check `bind-address` in `/etc/mysql/mysql.conf.d/mysqld.cnf` is `0.0.0.0`.
+*   **"Vulnerable App UNREACHABLE"**:
+    *   Ensure the app is actually running in the VM (`python3 vulnerable_app/app.py`).
+    *   Check VM Firewall: `sudo ufw allow 5000`.
