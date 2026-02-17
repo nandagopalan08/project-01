@@ -1,73 +1,89 @@
+$ErrorActionPreference = "Stop"
+
 Write-Host "Hybrid Security Lab - Startup Script" -ForegroundColor Cyan
 Write-Host "--------------------------------------"
-Write-Host "This script starts the SECURITY GATEWAY on your Windows host."
-Write-Host "The VULNERABLE APP must be running inside your Lubuntu VM."
+Write-Host "This script configures and starts the project on your Windows host."
+Write-Host "It connects to the Database running inside your VM."
 Write-Host "--------------------------------------"
 
 # 1. Configuration
-$rawVmIP = Read-Host "Enter the IP Address of your Lubuntu VM (e.g., 192.168.1.50) [Check with 'hostname -I' in VM]"
+$rawVmIP = Read-Host "Enter the IP Address of your VM (e.g., 192.168.1.13) [Check with 'hostname -I' in VM]"
 
 if ([string]::IsNullOrWhiteSpace($rawVmIP)) {
     Write-Host "VM IP is required. Exiting..." -ForegroundColor Red
     exit
 }
 
-# Fix: Handle case where user pastes multiple IPs (e.g. "10.0.2.15 fd17:...")
+# Fix: Handle case where user pastes multiple IPs
 $vmIP = $rawVmIP.Split(' ', [StringSplitOptions]::RemoveEmptyEntries)[0].Trim()
 
 # Warning for NAT IP
 if ($vmIP -eq "10.0.2.15") {
-    Write-Host "--------------------------------------------------------" -ForegroundColor Yellow
-    Write-Host "WARNING: You entered '10.0.2.15'." -ForegroundColor Red
-    Write-Host "This is usually the default NAT IP and is NOT reachable from Windows." -ForegroundColor Yellow
-    Write-Host "Please ensure your VM Network is set to 'Bridged Adapter' in VirtualBox." -ForegroundColor Yellow
-    Write-Host "If you use Bridged, your IP should look like 192.168.x.x" -ForegroundColor Yellow
-    Write-Host "--------------------------------------------------------" -ForegroundColor Yellow
-    Start-Sleep -Seconds 3
+    Write-Host "WARNING: You entered '10.0.2.15' (Default NAT IP)." -ForegroundColor Yellow
+    Write-Host "This IP is usually NOT reachable from Windows." -ForegroundColor Red
+    Write-Host "Please set your VM Network Adapter to 'Bridged Adapter' to get a reachable IP." -ForegroundColor Yellow
+    Write-Host "Proceeding, but connection will likely fail..." -ForegroundColor DarkGray
+    Start-Sleep -Seconds 2
 }
 
-$dbPassword = Read-Host "Enter VM MySQL 'root' Password (default is 'root' if using vm_provision.sh)"
-if ([string]::IsNullOrWhiteSpace($dbPassword)) {
-    $dbPassword = "root"
-    Write-Host "Using default password: 'root'" -ForegroundColor DarkGray
-}
-
-# 2. Set Environment Variables for the Security Gateway (Running Locally)
+# 2. Set Environment Variables
+# We use the 'admin' user created by our reinit_db.sh script
 $env:DB_HOST = $vmIP
-$env:DB_USER = "root"
-$env:DB_PASSWORD = $dbPassword
-$env:VULNERABLE_APP_URL = "http://$($vmIP):5000"
+$env:DB_USER = "admin"
+$env:DB_PASSWORD = "admin123"
+$env:VULNERABLE_APP_URL = "http://$($vmIP):5000" 
 
-# 3. Start the Security Gateway
+# 3. Validation
+Write-Host "Testing connection to VM Database at $vmIP..." -ForegroundColor Gray
+try {
+    # Simple Python one-liner to test connection
+    $testCmd = "import mysql.connector; mysql.connector.connect(user='admin', password='admin123', host='$vmIP', database='security_db'); print('OK')"
+    # Hide error output to keep it clean, catch block handles it
+    $res = python -c $testCmd 2>$null
+    if ($res -match "OK") {
+        Write-Host "SUCCESS: Connected to Database!" -ForegroundColor Green
+    } else {
+        throw "Connection failed"
+    }
+} catch {
+    Write-Host "ERROR: Could not connect to the Database at $vmIP." -ForegroundColor Red
+    Write-Host "Troubleshooting:" -ForegroundColor Yellow
+    Write-Host "1. Did you run 'bash database/reinit_db.sh' INSIDE the VM?"
+    Write-Host "2. Is the VM firewall allowing port 3306? (sudo ufw allow 3306)"
+    Write-Host "3. Is the IP correct?"
+    
+    $retry = Read-Host "Do you want to continue anyway? (y/n)"
+    if ($retry -ne "y") { exit }
+}
+
+# 4. Start the Applications
 Write-Host "--------------------------------------"
 Write-Host "Starting Security Gateway..." -ForegroundColor Cyan
-Write-Host "Targeting Vulnerable App at: $env:VULNERABLE_APP_URL"
-Write-Host "Connecting to Database at:   $env:DB_HOST"
+Write-Host "Connecting to DB at: $env:DB_HOST"
 Write-Host "--------------------------------------"
 
-# Check if we can reach the VM (Basic Ping)
-if (Test-Connection -ComputerName $vmIP -Count 1 -Quiet) {
-    Write-Host "VM ($vmIP) is reachable." -ForegroundColor Green
+# Start Security Gateway (Admin Panel)
+Start-Process python -ArgumentList "security_gateway/app.py" -WindowStyle Normal
+
+# Option to start Vulnerable App locally too (if desired)
+$startVuln = Read-Host "Do you want to run the Vulnerable App LOCALLY as well? (y/n) [Default: n, assuming it runs in VM]"
+if ($startVuln -eq "y") {
+    Start-Process python -ArgumentList "vulnerable_app/app.py" -WindowStyle Normal
+    Write-Host "Started Vulnerable App on http://localhost:5000" -ForegroundColor Green
+}
+
+Write-Host "--------------------------------------"
+Write-Host "Dashboard Access:"
+Write-Host ">> Admin Panel:       http://127.0.0.1:5001/admin_panel"
+Write-Host "   (Login: admin / securep@ss)"
+Write-Host ">> Security Gateway:  http://127.0.0.1:5001"
+if ($startVuln -eq "y") {
+    Write-Host ">> Vulnerable App:    http://127.0.0.1:5000"
+    Write-Host "   (Login: admin / admin123)"
 } else {
-    Write-Host "WARNING: VM ($vmIP) is not responding to ping. Proceeding anyway..." -ForegroundColor Yellow
+    Write-Host ">> Vulnerable App:    http://$($vmIP):5000 (Running in VM)"
+    Write-Host "   (Login: admin / admin123)"
 }
-
-# Start the Python Process
-Try {
-    Start-Process python -ArgumentList "security_gateway/app.py" -WindowStyle Normal
-    
-    Write-Host "Security Gateway launched in a new window." -ForegroundColor Green
-    Write-Host ""
-    Write-Host "Access Points:"
-    Write-Host "1. Security Gateway (Protected):   http://127.0.0.1:5001"
-    Write-Host "2. Admin Dashboard:                http://127.0.0.1:5001/admin_panel"
-    Write-Host "3. Vulnerable App (Direct VM):     http://$($vmIP):5000"
-}
-Catch {
-    Write-Host "Error starting Python process. Ensure Python is installed and in your PATH." -ForegroundColor Red
-    Write-Host $_.Exception.Message
-}
-
 Write-Host "--------------------------------------"
 Write-Host "Press any key to close this launcher..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

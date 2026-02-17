@@ -9,8 +9,8 @@ app.secret_key = 'vulnerable_secret'
 # Database Connection Config
 db_config = {
     'host': os.getenv('DB_HOST', 'localhost'),
-    'user': 'root',
-    'password': os.getenv('DB_PASSWORD', 'root'),  # Use environment variable or default to 'root'
+    'user': 'admin',
+    'password': 'admin123',
     'database': 'vulnerable_db'
 }
 
