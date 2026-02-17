@@ -12,10 +12,10 @@ app = Flask(__name__)
 VULNERABLE_APP_URL = os.getenv('VULNERABLE_APP_URL', "http://127.0.0.1:5000")
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'localhost'),
-    'user': 'admin',
-    'password': 'admin123',
+    'user': 'root', # CHANGED TO ROOT
+    'password': 'root', # CHANGED TO ROOT
     'database': 'security_db',
-    'auth_plugin': 'mysql_native_password' # Explicitly requested for compatibility
+    'auth_plugin': 'mysql_native_password'
 }
 
 def get_db():

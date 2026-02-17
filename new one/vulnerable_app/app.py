@@ -8,12 +8,13 @@ app.secret_key = 'vulnerable_secret'
 
 # Database Connection Config
 # Database Connection Config
+# Database Connection Config
 db_config = {
     'host': os.getenv('DB_HOST', 'localhost'),
-    'user': 'admin',
-    'password': 'admin123',
+    'user': 'root', # CHANGED TO ROOT
+    'password': 'root', # CHANGED TO ROOT
     'database': 'vulnerable_db',
-    'auth_plugin': 'mysql_native_password' # Explicitly requested for compatibility
+    'auth_plugin': 'mysql_native_password'
 }
 
 def get_db_connection():

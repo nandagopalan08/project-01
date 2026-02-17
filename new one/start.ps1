@@ -29,8 +29,8 @@ if ($vmIP -eq "10.0.2.15") {
 # 2. Set Environment Variables
 # We use the 'admin' user created by our reinit_db.sh script
 $env:DB_HOST = $vmIP
-$env:DB_USER = "admin"
-$env:DB_PASSWORD = "admin123"
+$env:DB_USER = "root"
+$env:DB_PASSWORD = "root"
 $env:VULNERABLE_APP_URL = "http://$($vmIP):5000" 
 
 # 3. Validation
