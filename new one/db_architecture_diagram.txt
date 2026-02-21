@@ -1,0 +1,26 @@
+[DATABASE ARCHITECTURE DIAGRAM]
+---------------------------
+
+[ Windows Host ]                [ Lubuntu VM ]
++-------------------+           +----------------------------+
+| Security Gateway  |           | Vulnerable Web Application |
+| (Port 5001)       |           | (Port 5000)                |
++---------+---------+           +-------------+--------------+
+          |                                  |
+          |          (MySQL Protocol)        |
+          +----------------------------------+
+                             |
+                    +--------v--------+
+                    |  MariaDB/MySQL  |
+                    |  (Port 3306)    |
+                    |  [vulnerable_db]|
+                    +-----------------+
+
+Schema: vulnerable_db
+  - users (App Data / Vulnerable)
+  - sessions (App Data / Vulnerable)
+  - attack_logs (Security / Gateway)
+  - monitored_sites (Security / Gateway)
+  - security_events (Security / Gateway)
+  - login_logs (Shared Context)
+  - blocked_ips (Security / Gateway)

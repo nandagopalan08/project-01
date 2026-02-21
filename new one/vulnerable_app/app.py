@@ -8,24 +8,19 @@ app.secret_key = 'vulnerable_secret'
 
 # Database Connection Config
 # Database Connection Config
-# Database Connection Config
 db_config = {
     'host': os.getenv('DB_HOST', 'localhost'),
-    'user': 'root', # CHANGED TO ROOT
-    'password': 'root', # CHANGED TO ROOT
-    'database': 'vulnerable_db',
-    'auth_plugin': 'mysql_native_password'
+    'user': 'project_user',
+    'password': 'project123',
+    'database': 'vulnerable_db'
 }
 
 def get_db_connection():
     try:
-        # Pass dictionary unpacked, ensuring auth_plugin is respected if supported by connector
-        # Note: mysql-connector-python 8.0+ handles this automatically, but explicit passing helps debug
         conn = mysql.connector.connect(**db_config)
         return conn
     except mysql.connector.Error as err:
         print(f"Error connecting to DB: {err}")
-        print(f"Debug: Trying to connect to {db_config['host']} as {db_config['user']} with {db_config.get('auth_plugin')}")
         return None
 
 def log_login_attempt(username, status, ip):

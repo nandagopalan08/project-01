@@ -1,0 +1,20 @@
+[NETWORK CONFIGURATION]
+-----------------------
+Host (Windows):
+  - IP: (Varies, check with ipconfig)
+  - Security Gateway listening on: 127.0.0.1:5001
+  - Admin Dashboard listening on: 127.0.0.1:5001/admin_panel
+
+VM (Lubuntu):
+  - IP: (Check with hostname -I)
+  - Vulnerable App listening on: 0.0.0.0:5000
+  - MySQL Server listening on: 0.0.0.0:3306
+
+Firewall Rules (VM):
+  - Port 22 (SSH): ALLOW
+  - Port 3306 (MySQL): ALLOW
+  - Port 5000 (HTTP): ALLOW
+
+Routing:
+  - Security Gateway (Host) Proxies to -> Vulnerable App (VM:5000)
+  - Both Apps connect to -> MySQL (VM:3306)

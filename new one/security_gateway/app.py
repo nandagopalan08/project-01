@@ -12,10 +12,9 @@ app = Flask(__name__)
 VULNERABLE_APP_URL = os.getenv('VULNERABLE_APP_URL', "http://127.0.0.1:5000")
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'localhost'),
-    'user': 'root', # CHANGED TO ROOT
-    'password': 'root', # CHANGED TO ROOT
-    'database': 'security_db',
-    'auth_plugin': 'mysql_native_password'
+    'user': 'project_user',
+    'password': 'project123',
+    'database': 'vulnerable_db'
 }
 
 def get_db():
@@ -23,7 +22,6 @@ def get_db():
         return mysql.connector.connect(**DB_CONFIG)
     except mysql.connector.Error as err:
         print(f"Error connecting to Security DB: {err}")
-        print(f"Debug: {DB_CONFIG['host']} | {DB_CONFIG['user']}")
         return None
 
 def get_app_id():

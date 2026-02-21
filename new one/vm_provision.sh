@@ -1,73 +1,61 @@
 #!/bin/bash
 
-# VM Provisioning Script for Lubuntu
-# Run this script inside the VM to set up the environment.
+# ==========================================
+# VM PROVISIONING SCRIPT (STABLE VERSION)
+# ==========================================
 
-echo "--- Updating Package Lists ---"
-sudo apt-get update
+echo "[*] Updating system packages..."
+sudo apt-get update -y
 
-echo "--- Installing Python and MySQL ---"
-sudo apt-get install -y python3 python3-pip python3-venv mysql-server libmysqlclient-dev pkg-config
+echo "[*] Installing Python, MySQL, and dependencies..."
+sudo apt-get install -y python3 python3-pip python3-venv mysql-server ufw
 
-echo "--- Configuring MySQL ---"
-# Start MySQL Service
-sudo systemctl start mysql
-sudo systemctl enable mysql
-
-# Secure MySQL and Enable Remote Access
-# Allow remote root login (ONLY FOR LAB ENVIRONMENT)
-echo "Configuring MySQL Users..."
-# Use default authentication plugin (compatible with modern MySQL 8.0+)
-sudo mysql -e "CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY 'root';"
-sudo mysql -e "ALTER USER 'root'@'%' IDENTIFIED BY 'root';"
-sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;"
-sudo mysql -e "FLUSH PRIVILEGES;"
-
-# Also ensure localhost root is usable with default auth
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';"
-sudo mysql -e "FLUSH PRIVILEGES;"
-
-# Allow remote connections in my.cnf
-# By default, MySQL binds to 127.0.0.1. We need to set to 0.0.0.0
-CONF_FILE=$(find /etc/mysql -name "mysqld.cnf" | head -n 1)
-if [ -z "$CONF_FILE" ]; then
-    CONF_FILE="/etc/mysql/mysql.conf.d/mysqld.cnf"
+echo "[*] Configuring MySQL for Remote Access..."
+# Fix MySQL bind-address to allow external connections
+CONF_FILE="/etc/mysql/mysql.conf.d/mysqld.cnf"
+if [ ! -f "$CONF_FILE" ]; then
+    CONF_FILE="/etc/mysql/my.cnf"
 fi
 
-if [ -f "$CONF_FILE" ]; then
-    echo "Modifying MySQL Config at $CONF_FILE to allow remote connections..."
-    # Replace bind-address line, handling comments
-    sudo sed -i 's/^#\?bind-address.*/bind-address = 0.0.0.0/' "$CONF_FILE"
-    # Also ensure mysqlx-bind-address is handled if present
-    sudo sed -i 's/^#\?mysqlx-bind-address.*/mysqlx-bind-address = 0.0.0.0/' "$CONF_FILE"
-    
-    cat "$CONF_FILE" | grep "bind-address"
-    sudo systemctl restart mysql
-else
-    echo "WARNING: MySQL config file not found!"
-fi
+sudo sed -i 's/bind-address.*/bind-address = 0.0.0.0/' "$CONF_FILE"
+sudo systemctl restart mysql
 
-echo "--- Setting up Database Schema ---"
-# Check if database/setup.sql exists
+echo "[*] Initializing Database & User (project_user)..."
+# We use the simplified IDENTIFIED BY to avoid plugin conflicts (mysql_native_password vs caching_sha2_password)
+sudo mysql <<EOF
+CREATE DATABASE IF NOT EXISTS vulnerable_db;
+-- Create project_user if not exists
+CREATE USER IF NOT EXISTS 'project_user'@'%' IDENTIFIED BY 'project123';
+-- Reset password and ensure no plugin conflicts
+ALTER USER 'project_user'@'%' IDENTIFIED BY 'project123';
+GRANT ALL PRIVILEGES ON *.* TO 'project_user'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+EOF
+
+echo "[*] Applying Schema from setup.sql..."
 if [ -f "database/setup.sql" ]; then
-    sudo mysql -u root -proot < database/setup.sql
-    echo "Database Schema applied successfully."
+    sudo mysql vulnerable_db < database/setup.sql
+    echo "[+] Schema applied successfully."
 else
-    echo "ERROR: database/setup.sql not found! Please ensure you copied the 'database' folder."
-    exit 1
+    echo "[-] Warning: database/setup.sql not found."
 fi
 
-echo "--- Installing Python Requirements ---"
+echo "[*] Configuring Firewall (UFW)..."
+sudo ufw allow 3306/tcp  # MySQL
+sudo ufw allow 5000/tcp  # Vulnerable App
+sudo ufw allow 22/tcp    # SSH
+echo "y" | sudo ufw enable
+
+echo "[*] Installing Python requirements..."
 if [ -f "requirements.txt" ]; then
     pip3 install -r requirements.txt --break-system-packages
-else
-    echo "ERROR: requirements.txt not found!"
-    exit 1
 fi
 
-echo "--- Setup Complete ---"
-echo "To start the Vulnerable App, run:"
-echo "python3 vulnerable_app/app.py"
-echo ""
-echo "Note the VM IP Address:"
-hostname -I
+echo "=========================================="
+echo " PROVISIONING COMPLETE"
+echo "=========================================="
+echo "Database IP: $(hostname -I | awk '{print $1}')"
+echo "User: project_user"
+echo "Pass: project123"
+echo "Port: 3306"
+echo "=========================================="

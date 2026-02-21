@@ -1,0 +1,19 @@
+[CONNECTION FLOW]
+---------------
+
+1. User Browser -> http://localhost:5001 (Gateway)
+2. Gateway -> analyze_request() (Detection Engine)
+3. IF Malicious:
+   - Gateway -> INSERT INTO attack_logs (MySQL VM:3306)
+   - Gateway -> Return 403 Forbidden
+4. IF Safe:
+   - Gateway -> Proxy Request -> http://<VM_IP>:5000 (Vulnerable App)
+   - Vulnerable App -> DB Queries (MySQL VM:3306)
+   - Vulnerable App -> Return Response -> Gateway
+   - Gateway -> Return Response -> User Browser
+
+Login Tracking Flow:
+1. User -> Login Attempt
+2. App -> SELECT FROM users (MySQL VM:3306)
+3. App -> INSERT INTO login_logs (MySQL VM:3306)
+4. Gateway -> Monitors response status for brute force detection

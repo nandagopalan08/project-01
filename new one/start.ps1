@@ -27,17 +27,17 @@ if ($vmIP -eq "10.0.2.15") {
 }
 
 # 2. Set Environment Variables
-# We use the 'admin' user created by our reinit_db.sh script
+# We use the 'project_user' created by our provisioning script
 $env:DB_HOST = $vmIP
-$env:DB_USER = "root"
-$env:DB_PASSWORD = "root"
+$env:DB_USER = "project_user"
+$env:DB_PASSWORD = "project123"
 $env:VULNERABLE_APP_URL = "http://$($vmIP):5000" 
 
 # 3. Validation
 Write-Host "Testing connection to VM Database at $vmIP..." -ForegroundColor Gray
 try {
     # Simple Python one-liner to test connection
-    $testCmd = "import mysql.connector; mysql.connector.connect(user='admin', password='admin123', host='$vmIP', database='security_db'); print('OK')"
+    $testCmd = "import mysql.connector; mysql.connector.connect(user='project_user', password='project123', host='$vmIP', database='vulnerable_db'); print('OK')"
     # Hide error output to keep it clean, catch block handles it
     $res = python -c $testCmd 2>$null
     if ($res -match "OK") {
@@ -48,7 +48,7 @@ try {
 } catch {
     Write-Host "ERROR: Could not connect to the Database at $vmIP." -ForegroundColor Red
     Write-Host "Troubleshooting:" -ForegroundColor Yellow
-    Write-Host "1. Did you run 'bash database/reinit_db.sh' INSIDE the VM?"
+    Write-Host "1. Did you run 'bash vm_provision.sh' INSIDE the VM?"
     Write-Host "2. Is the VM firewall allowing port 3306? (sudo ufw allow 3306)"
     Write-Host "3. Is the IP correct?"
     
@@ -79,10 +79,10 @@ Write-Host "   (Login: admin / securep@ss)"
 Write-Host ">> Security Gateway:  http://127.0.0.1:5001"
 if ($startVuln -eq "y") {
     Write-Host ">> Vulnerable App:    http://127.0.0.1:5000"
-    Write-Host "   (Login: admin / admin123)"
+    Write-Host "   (App Users: admin / admin123, victim / password123)"
 } else {
     Write-Host ">> Vulnerable App:    http://$($vmIP):5000 (Running in VM)"
-    Write-Host "   (Login: admin / admin123)"
+    Write-Host "   (App Users: admin / admin123, victim / password123)"
 }
 Write-Host "--------------------------------------"
 Write-Host "Press any key to close this launcher..."

@@ -1,0 +1,21 @@
+[SECURITY MODEL]
+----------------
+
+1. Vulnerability Layer (Simulated):
+   - SQL Injection: Intentionally unparameterized queries in vulnerable_app/app.py.
+   - XSS: Unsanitized template rendering in search and comments.
+   - Brute Force: Weak password policies and direct login endpoint.
+
+2. Detection Layer (Security Gateway):
+   - Signatures: Regex patterns for common SQLi and XSS payloads.
+   - Rate Limiting: Login attempt tracking per IP in login_attempts table.
+   - Real-time Logging: All suspicious payloads captured in attack_logs.
+
+3. Protection Layer (Security Gateway):
+   - WAF: Blocks malicious requests before they reach the vulnerable server.
+   - IP Blocking: Automatic blocking of IPs reaching brute force thresholds.
+   - Alerting: Visual dashboard for administrator overview.
+
+4. Database Security (Hardened for Lab):
+   - project_user: Password-based auth for easy remote setup.
+   - Simplified Auth: Avoids complex plugin issues for stable demonstration.
