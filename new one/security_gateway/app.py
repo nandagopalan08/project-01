@@ -94,7 +94,7 @@ def update_login_attempt(ip, is_success):
     else:
         if record:
             new_count = record['attempt_count'] + 1
-            is_locked = new_count >= 5
+            is_locked = new_count >= 2
             cursor.execute("UPDATE login_attempts SET attempt_count = %s, last_attempt = %s, is_locked = %s WHERE attempt_id = %s", 
                            (new_count, now, is_locked, record['attempt_id']))
             if is_locked and not record['is_locked']:

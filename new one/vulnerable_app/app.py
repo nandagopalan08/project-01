@@ -184,11 +184,10 @@ def add_comment(car_id):
     if conn:
         try:
             cursor = conn.cursor()
-            # VULNERABLE CODE: Stored XSS potential if inputs not sanitized
-            # Here we protect against SQL Injection with parameterized query,
-            # but the stored text will be rendered unsanitized in the template.
-            query = "INSERT INTO comments (car_id, user, comment_text) VALUES (%s, %s, %s)"
-            cursor.execute(query, (car_id, user, comment_text))
+            # VULNERABLE CODE: Stored XSS and SQL Injection
+            # Direct string formatting without sanitization
+            query = f"INSERT INTO comments (car_id, user, comment_text) VALUES ({car_id}, '{user}', '{comment_text}')"
+            cursor.execute(query)
             conn.commit()
         except mysql.connector.Error as err:
             return f"Error posting comment: {err}"
@@ -220,6 +219,20 @@ def search():
         </div>
         {{% endblock %}}
     ''') 
+
+@app.route('/read')
+def read_file():
+    # VULNERABLE CODE: Path Traversal / Local File Inclusion (LFI)
+    filename = request.args.get('file')
+    if not filename:
+        return "Please specify a file parameter, e.g., /read?file=requirements.txt"
+    try:
+        # Directly opens user-supplied path
+        with open(filename, 'r') as f:
+            content = f.read()
+        return f"<pre>{content}</pre>"
+    except Exception as e:
+        return f"Error reading file"
 
 if __name__ == '__main__':
     # Listen on all interfaces so VM is accessible from Host

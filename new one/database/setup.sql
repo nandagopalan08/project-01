@@ -68,6 +68,40 @@ CREATE TABLE monitored_sites (
     status VARCHAR(20) DEFAULT 'active'
 );
 
+DROP TABLE IF EXISTS vulnerable_applications;
+CREATE TABLE vulnerable_applications (
+    app_id INT AUTO_INCREMENT PRIMARY KEY,
+    app_name VARCHAR(100),
+    app_url VARCHAR(255)
+);
+
+DROP TABLE IF EXISTS attacks;
+CREATE TABLE attacks (
+    attack_id INT AUTO_INCREMENT PRIMARY KEY,
+    attack_type VARCHAR(50),
+    payload TEXT,
+    ip_address VARCHAR(45),
+    app_id INT,
+    attack_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DROP TABLE IF EXISTS security_logs;
+CREATE TABLE security_logs (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    action_taken VARCHAR(100),
+    reason TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DROP TABLE IF EXISTS login_attempts;
+CREATE TABLE login_attempts (
+    attempt_id INT AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(45),
+    attempt_count INT DEFAULT 0,
+    last_attempt TIMESTAMP,
+    is_locked BOOLEAN DEFAULT FALSE
+);
+
 DROP TABLE IF EXISTS attack_logs;
 CREATE TABLE attack_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
