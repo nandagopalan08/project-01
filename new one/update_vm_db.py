@@ -19,7 +19,6 @@ def setup_database():
         'host': vm_ip,
         'user': 'root', 
         'password': 'root',
-        'auth_plugin': 'mysql_native_password',
         'autocommit': True
     }
     

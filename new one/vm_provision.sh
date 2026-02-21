@@ -26,9 +26,12 @@ sudo mysql <<EOF
 CREATE DATABASE IF NOT EXISTS vulnerable_db;
 -- Create project_user if not exists
 CREATE USER IF NOT EXISTS 'project_user'@'%' IDENTIFIED BY 'project123';
+CREATE USER IF NOT EXISTS 'project_user'@'localhost' IDENTIFIED BY 'project123';
 -- Reset password and ensure no plugin conflicts
 ALTER USER 'project_user'@'%' IDENTIFIED BY 'project123';
+ALTER USER 'project_user'@'localhost' IDENTIFIED BY 'project123';
 GRANT ALL PRIVILEGES ON *.* TO 'project_user'@'%' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'project_user'@'localhost' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
 EOF
 

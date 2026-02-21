@@ -11,8 +11,11 @@ USE vulnerable_db;
 -- 2. Create Project User (Consistent across VM/Host)
 -- Using plain IDENTIFIED BY for maximum compatibility across MariaDB/MySQL
 DROP USER IF EXISTS 'project_user'@'%';
+DROP USER IF EXISTS 'project_user'@'localhost';
 CREATE USER 'project_user'@'%' IDENTIFIED BY 'project123';
+CREATE USER 'project_user'@'localhost' IDENTIFIED BY 'project123';
 GRANT ALL PRIVILEGES ON vulnerable_db.* TO 'project_user'@'%';
+GRANT ALL PRIVILEGES ON vulnerable_db.* TO 'project_user'@'localhost';
 FLUSH PRIVILEGES;
 
 -- 3. Core Tables for Vulnerable App

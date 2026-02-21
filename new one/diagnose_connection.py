@@ -24,13 +24,13 @@ def check_port(ip, port, service_name):
         s.close()
 
 def check_mysql_login(ip):
-    print(f"[*] Attempting MySQL Login (User: admin)...", end=' ')
+    print(f"[*] Attempting MySQL Login (User: project_user)...", end=' ')
     try:
         conn = mysql.connector.connect(
             host=ip,
-            user='admin',
-            password='admin123',
-            database='security_db',
+            user='project_user',
+            password='project123',
+            database='vulnerable_db',
             connection_timeout=3
         )
         conn.close()
@@ -39,7 +39,7 @@ def check_mysql_login(ip):
     except mysql.connector.Error as err:
         print(f"FAILED. Error: {err}")
         if "Access denied" in str(err):
-            print("    -> Hint: Is the 'admin' user created? Did you run 'bash reinit_db.sh' in the VM?")
+            print("    -> Hint: Is the 'project_user' user created? Did you run 'bash reinit_db.sh' in the VM?")
         if "Can't connect" in str(err):
              print("    -> Hint: Is MySQL running? Is bind-address = 0.0.0.0?")
         return False
