@@ -32,9 +32,9 @@ DROP USER IF EXISTS 'admin'@'%';
 DROP USER IF EXISTS 'admin'@'localhost';
 
 -- Create admin user accessible from ANY IP (%)
--- Identified with mysql_native_password for compatibility
-CREATE USER 'admin'@'%' IDENTIFIED WITH mysql_native_password BY 'admin123';
-CREATE USER 'admin'@'localhost' IDENTIFIED WITH mysql_native_password BY 'admin123';
+-- Identified with default password plugin (caching_sha2_password)
+CREATE USER 'admin'@'%' IDENTIFIED BY 'admin123';
+CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin123';
 
 -- Grant Full Privileges
 GRANT ALL PRIVILEGES ON *.* TO 'admin'@'%' WITH GRANT OPTION;
