@@ -17,8 +17,8 @@ def setup_database():
     # 2. Connection Config
     config = {
         'host': vm_ip,
-        'user': 'root', 
-        'password': 'root',
+        'user': 'admin', 
+        'password': 'admin123',
         'autocommit': True
     }
     
