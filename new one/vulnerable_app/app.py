@@ -38,6 +38,9 @@ def log_login_attempt(username, status, ip):
 
 @app.route('/')
 def home():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+        
     cars = []
     conn = get_db_connection()
     if conn:
@@ -220,19 +223,6 @@ def search():
         {{% endblock %}}
     ''') 
 
-@app.route('/read')
-def read_file():
-    # VULNERABLE CODE: Path Traversal / Local File Inclusion (LFI)
-    filename = request.args.get('file')
-    if not filename:
-        return "Please specify a file parameter, e.g., /read?file=requirements.txt"
-    try:
-        # Directly opens user-supplied path
-        with open(filename, 'r') as f:
-            content = f.read()
-        return f"<pre>{content}</pre>"
-    except Exception as e:
-        return f"Error reading file"
 
 if __name__ == '__main__':
     # Listen on all interfaces so VM is accessible from Host
